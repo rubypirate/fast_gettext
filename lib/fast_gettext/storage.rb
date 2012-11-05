@@ -10,7 +10,7 @@ module FastGettext
       end
     end
 
-    [:available_locales, :_locale, :text_domain, :pluralisation_rule].each do |method_name|
+    [:available_locales, :_locale, :text_domain, :pluralisation_rule, :_ext1, :_ext2].each do |method_name|
       key = "fast_gettext_#{method_name}".to_sym
       define_method "#{method_name}=" do |value|
         Thread.current[key]=value
@@ -111,6 +111,22 @@ module FastGettext
       end
     end
 
+    def current_ext1
+      Thread.current[:fast_gettext_current_ext1] || {}
+    end
+
+    def current_ext1=(cache)
+      Thread.current[:fast_gettext_current_ext1] = cache
+    end
+
+    def current_ext2
+      Thread.current[:fast_gettext_current_ext2] || {}
+    end
+
+    def current_ext2=(cache)
+      Thread.current[:fast_gettext_current_ext2] = cache
+    end
+
     def cached_plural_find(*keys)
       key = '||||' + keys * '||||'
       translation = current_cache[key]
@@ -132,6 +148,32 @@ module FastGettext
     def locale=(new_locale)
       new_locale = best_locale_in(new_locale)
       self._locale = new_locale if new_locale
+    end
+
+    def ext1
+      _ext1
+    end
+
+    def ext2
+      _ext2
+    end
+
+    def ext1=(new_ext)
+      self._ext1 = new_ext
+    end
+
+    def ext2=(new_ext)
+      self._ext2 = new_ext
+    end
+
+    def set_ext1(new_locale)
+      self.ext1 = new_locale
+      locale
+    end
+
+    def set_ext2(new_locale)
+      self.ext2 = new_locale
+      locale
     end
 
     # for chaining: puts set_locale('xx') == 'xx' ? 'applied' : 'rejected'
@@ -206,6 +248,27 @@ module FastGettext
       caches[text_domain][locale] ||= {}
       caches[text_domain][locale][""] = false #ignore gettext meta key when translating
       self.current_cache = caches[text_domain][locale]
+
+
+      if ext1
+        if !caches[text_domain][ext1]
+          caches[text_domain][ext1] = TranslationKey.load_all(ext1)
+          caches[text_domain][ext1][""] = false #ignore gettext meta key when translating
+        end
+        self.current_ext1 = caches[text_domain][ext1]
+      else
+        self.current_ext1 = nil
+      end
+
+      if ext2
+        if !caches[text_domain][ext2]
+          caches[text_domain][ext2] = TranslationKey.load_all(ext2)
+          caches[text_domain][ext2][""] = false #ignore gettext meta key when translating
+        end
+        self.current_ext2 = caches[text_domain][ext2]
+      else
+        self.current_ext2 = nil
+      end
     end
   end
 end
