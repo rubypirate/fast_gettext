@@ -33,6 +33,7 @@ module FastGettext
     end
     private :_ext2, :_ext2=
 
+
     def available_locales
       locales = Thread.current[:fast_gettext_available_locales] || default_available_locales
       return unless locales
@@ -81,6 +82,22 @@ module FastGettext
       Thread.current[:fast_gettext_current_cache] = cache
     end
 
+    def current_ext1
+      Thread.current[:fast_gettext_current_ext1] || {}
+    end
+
+    def current_ext1=(cache)
+      Thread.current[:fast_gettext_current_ext1] = cache
+    end
+
+    def current_ext2
+      Thread.current[:fast_gettext_current_ext2] || {}
+    end
+
+    def current_ext2=(cache)
+      Thread.current[:fast_gettext_current_ext2] = cache
+    end
+
     #global, since re-parsing whole folders takes too much time...
     @@translation_repositories={}
     def translation_repositories
@@ -104,27 +121,15 @@ module FastGettext
 
     def cached_find(key)
       translation = current_cache[key]
+      translation = current_ext2[key] if ext2
+      translation ||= current_ext1[key] if ext1
+
+      translation ||= current_cache[key]
       if translation.nil? # uncached
         current_cache[key] = current_repository[key] || false
       else
         translation
       end
-    end
-
-    def current_ext1
-      Thread.current[:fast_gettext_current_ext1] || {}
-    end
-
-    def current_ext1=(cache)
-      Thread.current[:fast_gettext_current_ext1] = cache
-    end
-
-    def current_ext2
-      Thread.current[:fast_gettext_current_ext2] || {}
-    end
-
-    def current_ext2=(cache)
-      Thread.current[:fast_gettext_current_ext2] = cache
     end
 
     def cached_plural_find(*keys)
@@ -144,20 +149,15 @@ module FastGettext
     def locale
       _locale || ( default_locale || (available_locales||[]).first || 'en' )
     end
-
-    def locale=(new_locale)
-      new_locale = best_locale_in(new_locale)
-      self._locale = new_locale if new_locale
-    end
-
+    
     def ext1
-      _ext1
+      _ext1 
     end
 
     def ext2
       _ext2
     end
-
+    
     def ext1=(new_ext)
       self._ext1 = new_ext
     end
@@ -170,10 +170,15 @@ module FastGettext
       self.ext1 = new_locale
       locale
     end
-
+    
     def set_ext2(new_locale)
       self.ext2 = new_locale
       locale
+    end
+    
+    def locale=(new_locale)
+      new_locale = best_locale_in(new_locale)
+      self._locale = new_locale if new_locale
     end
 
     # for chaining: puts set_locale('xx') == 'xx' ? 'applied' : 'rejected'
@@ -238,7 +243,7 @@ module FastGettext
       found
     end
 
-    #de-de -> de_DE
+    #de-de -> de-DE
     def format_locale(locale)
       locale.sub(/^([a-zA-Z]{2,3})[-_]([a-zA-Z]{2,3})$/){$1.downcase+'_'+$2.upcase}
     end
@@ -249,7 +254,6 @@ module FastGettext
       caches[text_domain][locale][""] = false #ignore gettext meta key when translating
       self.current_cache = caches[text_domain][locale]
 
-
       if ext1
         if !caches[text_domain][ext1]
           caches[text_domain][ext1] = TranslationKey.load_all(ext1)
@@ -259,7 +263,7 @@ module FastGettext
       else
         self.current_ext1 = nil
       end
-
+      
       if ext2
         if !caches[text_domain][ext2]
           caches[text_domain][ext2] = TranslationKey.load_all(ext2)
@@ -268,7 +272,8 @@ module FastGettext
         self.current_ext2 = caches[text_domain][ext2]
       else
         self.current_ext2 = nil
-      end
+      end    
     end
   end
 end
+
