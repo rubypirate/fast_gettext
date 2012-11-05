@@ -29,4 +29,15 @@ class TranslationKey < ActiveRecord::Base
   def normalize_newlines
     self.key = self.class.newline_normalize(key)
   end
+
+  def self.load_all(locale)
+    translation_texts = TranslationText.find(:all, :conditions=>["locale = ?", locale], :include=>[:translation_key])
+    translation_texts
+    map = {}
+    for text in translation_texts
+      map[text.translation_key.key] = text.text
+    end
+    return map
+  end
+
 end
