@@ -23,6 +23,15 @@ module FastGettext
     end
     private :_locale, :_locale=
 
+    def _ext1
+      Thread.current[:fast_gettext__ext1]
+    end
+    private :_ext1, :_ext1=
+
+    def _ext2
+      Thread.current[:fast_gettext__ext2]
+    end
+    private :_ext2, :_ext2=
 
     def available_locales
       locales = Thread.current[:fast_gettext_available_locales] || default_available_locales
