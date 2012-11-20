@@ -11,6 +11,11 @@ class TranslationKey < ActiveRecord::Base
   before_save :normalize_newlines
 
   def self.translation(key, locale)
+    # p "#{key} #{locale}"
+    return if !key || key.to_s.length == 0
+    key = key.to_s[0..254]
+    return "<b class='tk'>#{key}</b>" if locale == "xx" && key && !key["format"] && !(key[0..4] == "date.") && !(key[0..4] == "time.") && key != "countries"
+
     return unless translation_key = find_by_key(newline_normalize(key))
     return unless translation_text = translation_key.translations.find_by_locale(locale)
     translation_text.text

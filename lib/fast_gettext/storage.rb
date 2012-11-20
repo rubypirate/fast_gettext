@@ -120,6 +120,9 @@ module FastGettext
     end
 
     def cached_find(key)
+      # check we ahve the cache set if the cache is empty
+      update_current_cache if current_cache.size == 0
+
       translation = current_cache[key]
       translation = current_ext2[key] if ext2
       translation ||= current_ext1[key] if ext1
@@ -127,6 +130,7 @@ module FastGettext
       translation ||= current_cache[key]
       if translation.nil? # uncached
         current_cache[key] = current_repository[key] || false
+        current_cache[key]
       else
         translation
       end
@@ -265,9 +269,13 @@ module FastGettext
       end
       
       if ext2
-        if !caches[text_domain][ext2]
+        version = 0
+        lang = TranslationLanguage.find_by_locale(ext2)
+        version = lang.version if lang
+        if !caches[text_domain][ext2] || !caches[text_domain][ext2][:version] || caches[text_domain][ext2][:version] < version
           caches[text_domain][ext2] = TranslationKey.load_all(ext2)
           caches[text_domain][ext2][""] = false #ignore gettext meta key when translating
+          caches[text_domain][ext2][:version] = version
         end
         self.current_ext2 = caches[text_domain][ext2]
       else
