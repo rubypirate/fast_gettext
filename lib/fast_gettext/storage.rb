@@ -269,6 +269,7 @@ module FastGettext
       end
       
       if ext2
+        #commented by rizwan. will see it later
         #version = 0
         #lang = TranslationLanguage.find_by_locale(ext2)
         #version = lang.version if lang
@@ -276,7 +277,7 @@ module FastGettext
         if !caches[text_domain][ext2]
           caches[text_domain][ext2] = TranslationKey.load_all(ext2)
           caches[text_domain][ext2][""] = false #ignore gettext meta key when translating
-          caches[text_domain][ext2][:version] = version
+          #caches[text_domain][ext2][:version] = version
         end
         self.current_ext2 = caches[text_domain][ext2]
       else
