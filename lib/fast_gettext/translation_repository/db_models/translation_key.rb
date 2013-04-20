@@ -42,7 +42,9 @@ class TranslationKey < ActiveRecord::Base
     translation_texts
     map = {}
     for text in translation_texts
-      map[text.translation_key.key] = text.text
+	  if text && text.translation_key
+        map[text.translation_key.key] = text.text
+      end
     end
     return map
   end

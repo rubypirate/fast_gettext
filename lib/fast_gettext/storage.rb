@@ -268,7 +268,7 @@ module FastGettext
         self.current_ext1 = nil
       end
       
-      if ext2
+      if ext2 && ext2.to_s.length > 0
         #commented by rizwan. will see it later
         #version = 0
         #lang = TranslationLanguage.find_by_locale(ext2)
