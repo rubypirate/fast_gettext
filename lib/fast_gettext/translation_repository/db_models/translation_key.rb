@@ -12,6 +12,10 @@ class TranslationKey < ActiveRecord::Base
 
   before_save :normalize_newlines
 
+  def to_label
+    self.key.to_s
+  end
+
   def self.translation(key, locale)
     # p "#{key} #{locale}"
     return if !key || key.to_s.length == 0
