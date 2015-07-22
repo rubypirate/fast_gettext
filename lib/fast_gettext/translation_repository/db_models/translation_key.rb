@@ -1,7 +1,7 @@
 class TranslationKey < ActiveRecord::Base
   has_many :translations, :class_name => 'TranslationText', :dependent => :destroy
   
-  xss_terminate :sanitize  => [:key]
+  xss_foliate :sanitize  => [:key]
   
   accepts_nested_attributes_for :translations, :allow_destroy => true
 
